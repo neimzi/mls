@@ -1,3 +1,627 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "$mls_version": "2.0.0",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Спецификации MLS-модели. Управляют инициализацией объекта.",
+  "type": "object",
+  "required": [ 
+    "output_interval",
+    "randomizer_seed",
+    "threads_amount",
+    "time_increment",
+    "layers",
+    "on_construction",
+    "on_evolution",
+    "on_destruction"
+  ],
+  "properties": {
+    "output_interval": {
+      "description": "Интервал времени симуляции между последовательными выводами модели.",
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "randomizer_seed": {
+      "description": "Порождающий элемент последовательности псевдослучайных чисел, назначаемый моделью.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "threads_amount": {
+      "description": "Количество потоков OpenMP для выполнения задач с распараллеленными циклами, назначаемое моделью.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "time_increment": {
+      "description": "Инкремент времени симуляции за шаг эволюции модели.",
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "layers": {
+      "type": "object",
+      "description": "Ассоциативный список слоев модели. Для каждой записи ключ представляет собой задаваемый идентификатор слоя, а значение - его спецификации.",
+      "patternProperties": {
+        "": {
+          "description": "Спецификации слоя.",
+          "required": [
+            "elements_amount",
+            "parameters",
+            "variables"
+          ],
+          "properties": {
+            "elements_amount": {
+              "description": "Количество элементов слоя.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "parameters": {
+              "description": "Ассоциативный список параметров слоя. Для каждой записи ключ представляет собой выбираемый идентификатор параметра, а значение - данные для его инициализации. Отдельно взятый параметр, в отличие от переменной, является общим для элементов слоя.",
+              "$ref": "#/definitions/variables"
+            },
+            "variables": {
+              "description": "Ассоциативный список переменных слоя. Для каждой записи ключ представляет собой выбираемый идентификатор переменной, а значение - данные для ее инициализации. Отдельно взятая переменная, в отличие от параметра, является индивидуальной для элемента слоя.",
+              "$ref": "#/definitions/variables"
+            },
+            "frame": {
+              "description": "Идентификатор типа системы отсчета, ассоциируемого со слоем в подходящих задачах модели.",
+              "enum": [ "global", "local" ]
+            },
+            "lattice": {
+              "description": "Идентификатор типа кристаллической решетки, ассоциируемого со слоем в подходящих задачах модели.",
+              "enum": [ "fcc" ]
+            },
+            "symmetry": {
+              "description": "Идентификатор типа симметрии, ассоциируемого со слоем в подходящих задачах модели.",
+              "enum": [ "cubic" ]
+            }
+          }
+        }
+      }
+    },
+    "on_construction": {
+      "type": "array",
+      "description": "Список задач, выполняемых при создании объекта модели. Каждая запись представляет собой спецификации выбираемого класса задачи.",
+      "items": { "$ref": "#/definitions/tasks" }
+    },
+    "on_evolution": {
+      "type": "array",
+      "description": "Список задач, выполняемых за шаг эволюции объекта модели. Каждая запись представляет собой спецификации выбираемого класса задачи.",
+      "items": { "$ref": "#/definitions/tasks" }
+    },
+    "on_destruction": {
+      "type": "array",
+      "description": "Список задач, выполняемых при уничтожении объекта модели. Каждая запись представляет собой спецификации выбираемого класса задачи.",
+      "items": { "$ref": "#/definitions/tasks" }
+    }
+  },
+  "definitions": {
+    "layer": {  },
+    "variables": {
+      "type": "object",
+      "propertyNames": {
+        "enum": [
+          "critical_shear_stresses",
+          "critical_shear_stresses_rate",
+          "displacement_gradient",
+          "displacement_gradient_rate",
+          "elastic_moduli",
+          "elastic_strain",
+          "elastic_strain_rate",
+          "hardening_exponent",
+          "hardening_multiplier",
+          "hardening_ratios",
+          "inelastic_strain",
+          "inelastic_strain_rate",
+          "lattice",
+          "label",
+          "orientation",
+          "orientation_rate",
+          "outputation_counters",
+          "parts",
+          "rate_sensitivity",
+          "saturation_shear_stress",
+          "shear_modes",
+          "shear_stresses",
+          "shear_stresses_rate",
+          "shears",
+          "shears_rate",
+          "sliding_multiplier",
+          "spin",
+          "spin_rate",
+          "strain",
+          "strain_rate",
+          "stress",
+          "stress_rate",
+          "velocity_gradient",
+          "velocity_gradient_rate",
+          "viscoplastic_strain",
+          "viscoplastic_strain_rate",
+          "volume"
+        ]
+      },
+      "patternProperties": {
+        "": {
+          "type": [ "array", "boolean", "integer", "null", "number", "object", "string" ]
+        }
+      }
+    },
+    "tasks": {
+      "oneOf": [
+        {
+          "description": "Спецификации задачи расширения.",
+          "type": "object",
+          "required": [ "invoke" ],
+          "propertyNames": { "enum": [ "invoke" ] },
+          "properties": {
+            "invoke": {
+              "description": "Идентификатор функции обратного вызова задачи из программного расширения MLS-модели.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи агрегирования.",
+          "type": "object",
+          "required": [ "aggregate", "method", "target" ],
+          "propertyNames": { "enum": [ "aggregate", "method", "target" ] },
+          "properties": {
+            "aggregate": {
+              "description": "Идентификатор переменной для агрегирования.",
+              "enum": [ "spin", "spin_rate", "strain", "strain_rate", "stress", "stress_rate" ]
+            },
+            "method": {
+              "description": "Идентификатор метода агрегирования.",
+              "enum": [ "mean", "mean_oriented", "mean_oriented_volumed", "mean_volumed" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя агрегирования. Конкретизирует элементы, получающие значения переменной.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи дезагрегирования.",
+          "type": "object",
+          "required": [ "disaggregate", "method", "target" ],
+          "propertyNames": { "enum": [ "disaggregate", "method", "target" ] },
+          "properties": {
+            "disaggregate": {
+              "description": "Идентификатор переменной для дезагрегирования.",
+              "enum": [ "velocity_gradient" ]
+            },
+            "method": {
+              "description": "Идентификатор метода дезагрегирования.",
+              "enum": [ "forward", "forward_oriented" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя дезагрегирования. Конкретизирует элементы, отправляющие значения переменной.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "$comment": "Эта схема препятствует автозаполнению `evaluate` соответствующим литералом из `enum` первой подходящей схемы в том случае, если он оказывается единственным.",
+          "description": "Спецификации задачи вычисления.",
+          "type": "object",
+          "required": [ "evaluate", "method", "target" ],
+          "propertyNames": { "enum": [ "evaluate", "method", "target" ] },
+          "properties": {
+            "evaluate": {
+              "not": true,
+              "description": "Идентификатор переменной для вычисления.",
+              "enum": [ "critical_shear_stresses_rate", "elastic_strain_rate", "inelastic_strain_rate", "shear_stresses", "shears_rate", "spin", "strain_rate", "stress_rate", "viscoplastic_strain_rate" ]
+            },
+            "method": {
+              "not": true,
+              "description": "Идентификатор метода вычисления.",
+              "enum": [ "beyerlein", "bronkhorst", "inelasticity", "hooke", "shveikin", "taylor", "trusov", "viscoplasticity" ]
+            },
+            "target": {
+              "not": true,
+              "description": "Идентификатор целевого слоя вычисления.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи вычисления.",
+          "type": "object",
+          "required": [ "evaluate", "method", "target" ],
+          "propertyNames": { "enum": [ "evaluate", "method", "target" ] },
+          "properties": {
+            "evaluate": {
+              "description": "Идентификатор переменной для вычисления.",
+              "enum": [ "critical_shear_stresses_rate" ]
+            },
+            "method": {
+              "description": "Идентификатор метода вычисления.",
+              "enum": [ "bronkhorst" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя вычисления.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи вычисления.",
+          "type": "object",
+          "required": [ "evaluate", "method", "target" ],
+          "propertyNames": { "enum": [ "evaluate", "method", "target" ] },
+          "properties": {
+            "evaluate": {
+              "description": "Идентификатор переменной для вычисления.",
+              "enum": [ "elastic_strain_rate" ]
+            },
+            "method": {
+              "description": "Идентификатор метода вычисления.",
+              "enum": [ "inelasticity" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя вычисления.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи вычисления.",
+          "type": "object",
+          "required": [ "evaluate", "method", "target" ],
+          "propertyNames": { "enum": [ "evaluate", "method", "target" ] },
+          "properties": {
+            "evaluate": {
+              "description": "Идентификатор переменной для вычисления.",
+              "enum": [ "inelastic_strain_rate" ]
+            },
+            "method": {
+              "description": "Идентификатор метода вычисления.",
+              "enum": [ "viscoplasticity" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя вычисления.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи вычисления.",
+          "type": "object",
+          "required": [ "evaluate", "method", "target" ],
+          "propertyNames": { "enum": [ "evaluate", "method", "target" ] },
+          "properties": {
+            "evaluate": {
+              "description": "Идентификатор переменной для вычисления.",
+              "enum": [ "shear_stresses" ]
+            },
+            "method": {
+              "description": "Идентификатор метода вычисления.",
+              "enum": [ "shveikin" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя вычисления.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи вычисления.",
+          "type": "object",
+          "required": [ "evaluate", "method", "target" ],
+          "propertyNames": { "enum": [ "evaluate", "method", "target" ] },
+          "properties": {
+            "evaluate": {
+              "description": "Идентификатор переменной для вычисления.",
+              "enum": [ "shears_rate" ]
+            },
+            "method": {
+              "description": "Идентификатор метода вычисления.",
+              "enum": [ "beyerlein" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя вычисления.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи вычисления.",
+          "type": "object",
+          "required": [ "evaluate", "method", "target" ],
+          "propertyNames": { "enum": [ "evaluate", "method", "target" ] },
+          "properties": {
+            "evaluate": {
+              "description": "Идентификатор переменной для вычисления.",
+              "enum": [ "spin" ]
+            },
+            "method": {
+              "description": "Идентификатор метода вычисления.",
+              "enum": [ "taylor", "trusov" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя вычисления.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи вычисления.",
+          "type": "object",
+          "required": [ "evaluate", "method", "target" ],
+          "propertyNames": { "enum": [ "evaluate", "method", "target" ] },
+          "properties": {
+            "evaluate": {
+              "description": "Идентификатор переменной для вычисления.",
+              "enum": [ "strain_rate" ]
+            },
+            "method": {
+              "description": "Идентификатор метода вычисления.",
+              "enum": [ "trusov" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя вычисления.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи вычисления.",
+          "type": "object",
+          "required": [ "evaluate", "method", "target" ],
+          "propertyNames": { "enum": [ "evaluate", "method", "target" ] },
+          "properties": {
+            "evaluate": {
+              "description": "Идентификатор переменной для вычисления.",
+              "enum": [ "stress_rate" ]
+            },
+            "method": {
+              "description": "Идентификатор метода вычисления.",
+              "enum": [ "hooke" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя вычисления.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи вычисления.",
+          "type": "object",
+          "required": [ "evaluate", "method", "target" ],
+          "propertyNames": { "enum": [ "evaluate", "method", "target" ] },
+          "properties": {
+            "evaluate": {
+              "description": "Идентификатор переменной для вычисления.",
+              "enum": [ "viscoplastic_strain_rate" ]
+            },
+            "method": {
+              "description": "Идентификатор метода вычисления.",
+              "enum": [ "trusov" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя вычисления.",
+              "type": "string"
+            }
+          }
+        },
+
+
+        {
+          "description": "Спецификации задачи генерации.",
+          "type": "object",
+          "required": [ "generate", "method", "target" ],
+          "propertyNames": { "enum": [ "generate", "method", "target" ] },
+          "properties": {
+            "generate": {
+              "description": "Идентификатор переменной для генерации.",
+              "enum": [ "orientation", "stress" ]
+            },
+            "method": {
+              "description": "Идентификатор метода генерации.",
+              "enum": [ "trivial" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя генерации.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи генерации.",
+          "type": "object",
+          "required": [ "generate", "method", "target" ],
+          "propertyNames": { "enum": [ "generate", "method", "target" ] },
+          "properties": {
+            "generate": {
+              "description": "Идентификатор переменной для генерации.",
+              "enum": [ "orientation" ]
+            },
+            "method": {
+              "description": "Идентификатор метода генерации.",
+              "enum": [ "random_uniform" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя генерации.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи генерации.",
+          "type": "object",
+          "required": [ "generate", "method", "target" ],
+          "propertyNames": { "enum": [ "generate", "method", "target", "sources" ] },
+          "properties": {
+            "generate": {
+              "description": "Идентификатор переменной для генерации.",
+              "enum": [ "parts" ]
+            },
+            "method": {
+              "description": "Идентификатор метода генерации.",
+              "enum": [ "amount" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя генерации.",
+              "type": "string"
+            },
+            "sources": {
+              "description": "Список исходных слоев генерации. Каждая запись представляет собой идентификатор слоя, влияющего на переменную.",
+              "type": "array",
+              "items": {
+                "description": "Идентификатор исходного слоя генерации.",
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи ввода.",
+          "type": "object",
+          "required": [ "input", "method", "target" ],
+          "propertyNames": { "enum": [ "input", "method", "target" ] },
+          "properties": {
+            "input": {
+              "description": "Идентификатор переменной для ввода.",
+              "enum": [ "critical_shear_stresses", "orientation", "stress", "volume" ]
+            },
+            "method": {
+              "description": "Идентификатор метода ввода.",
+              "enum": [ "csv" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя ввода.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи интегрирования.",
+          "type": "object",
+          "required": [ "integrate", "method", "target" ],
+          "propertyNames": { "enum": [ "integrate", "method", "target" ] },
+          "properties": {
+            "integrate": {
+              "description": "Идентификатор переменной для интегрирования.",
+              "enum": [
+                "critical_shear_stresses",
+                "elastic_strain",
+                "inelastic_strain",
+                "shears",
+                "strain",
+                "stress",
+                "viscoplastic_strain"
+              ]
+            },
+            "method": {
+              "description": "Идентификатор метода интегрирования.",
+              "enum": [ "euler" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя интегрирования.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи интегрирования.",
+          "type": "object",
+          "required": [ "integrate", "method", "target" ],
+          "propertyNames": { "enum": [ "integrate", "method", "target" ] },
+          "properties": {
+            "integrate": {
+              "description": "Идентификатор переменной для интегрирования.",
+              "enum": [ "displacement_gradient" ]
+            },
+            "method": {
+              "description": "Идентификатор метода интегрирования.",
+              "enum": [ "euler" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя интегрирования.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи интегрирования.",
+          "type": "object",
+          "required": [ "integrate", "method", "target" ],
+          "propertyNames": { "enum": [ "integrate", "method", "target" ] },
+          "properties": {
+            "integrate": {
+              "description": "Идентификатор переменной для интегрирования.",
+              "enum": [ "orientation" ]
+            },
+            "method": {
+              "description": "Идентификатор метода интегрирования.",
+              "enum": [ "euler" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя интегрирования.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи вывода.",
+          "type": "object",
+          "required": [ "output", "method", "target" ],
+          "propertyNames": { "enum": [ "output", "method", "target" ] },
+          "properties": {
+            "output": {
+              "description": "Идентификатор переменной для вывода.",
+              "enum": [ 
+                "critical_shear_stresses",
+                "critical_shear_stresses_rate",
+                "displacement_gradient",
+                "displacement_gradient_rate",
+                "elastic_strain",
+                "elastic_strain_rate",
+                "inelastic_strain",
+                "inelastic_strain_rate",
+                "orientation",
+                "orientation_rate",
+                "shear_stresses",
+                "shear_stresses_rate",
+                "shears",
+                "shears_rate",
+                "strain",
+                "strain_rate",
+                "stress",
+                "stress_rate",
+                "velocity_gradient",
+                "velocity_gradient_rate",
+                "viscoplastic_strain",
+                "viscoplastic_strain_rate"
+              ]
+            },
+            "method": {
+              "description": "Идентификатор метода вывода.",
+              "enum": [ "csv" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя вывода.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Спецификации задачи преобразования.",
+          "type": "object",
+          "required": [ "transform", "method", "target" ],
+          "propertyNames": { "enum": [ "transform", "method", "target" ] },
+          "properties": {
+            "transform": {
+              "description": "Идентификатор переменной для преобразования.",
+              "enum": [ "stress", "velocity_gradient" ]
+            },
+            "method": {
+              "description": "Идентификатор метода преобразования.",
+              "enum": [ "from_local", "from_global", "to_global", "to_local" ]
+            },
+            "target": {
+              "description": "Идентификатор целевого слоя преобразования.",
+              "type": "string"
+            }
+          }
+        }
+      ]
+    }
+  }
 }
