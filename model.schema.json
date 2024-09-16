@@ -1,3 +1,13 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "required": [ 
+    "output_interval",
+    "randomizer_seed",
+    "threads_amount",
+    "time_increment",
+    "layers",
+    "on_construction",
+    "on_evolution",
+    "on_destruction"
+  ]
 }
