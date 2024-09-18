@@ -9,5 +9,39 @@
     "on_construction",
     "on_evolution",
     "on_destruction"
-  ]
+  ],
+  "properties": {
+    "output_interval": {
+      "type": "number",
+      "description": "Интервал времени симуляции между последовательными выводами."
+    },
+    "randomizer_seed": {
+      "type": "integer",
+      "description": "Порождающий элемент последовательности псевдослучайных чисел."
+    },
+    "theads_amount": {
+      "type": "integer",
+      "description": "Количество потоков OpenMP для выполнения задач с распараллеленными циклами."
+    },
+    "time_increment": {
+      "type": "number",
+      "description": "Инкремент времени симуляции за шаг эволюции."
+    },
+    "layers": {
+      "type": "object",
+      "description": "Ассоциации слоев."
+    },
+    "on_construction": {
+      "type": "array",
+      "description": "Задачи, выполняемые при создании."
+    },
+      "on_evolution": {
+      "type": "array",
+      "description": "Задачи, выполняемые за шаг эволюции."
+    },
+      "on_destruction": {
+      "type": "array",
+      "description": "Задачи, выполняемые при уничтожении."
+    }
+  }
 }
