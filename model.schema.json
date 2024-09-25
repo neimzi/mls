@@ -19,7 +19,7 @@
       "type": "integer",
       "description": "Порождающий элемент последовательности псевдослучайных чисел."
     },
-    "theads_amount": {
+    "threads_amount": {
       "type": "integer",
       "description": "Количество потоков OpenMP для выполнения задач с распараллеленными циклами."
     },
