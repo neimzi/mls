@@ -111,6 +111,7 @@
           "inelastic_strain_rate",
           "lattice",
           "label",
+          "message",
           "orientation",
           "orientation_rate",
           "outputation_counters",
