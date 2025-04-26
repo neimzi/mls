@@ -1,5 +1,5 @@
 {
-  "$mls_version": "2.0.0",
+  "$mls_version": "2.1.0",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "description": "Спецификации MLS-модели. Управляют инициализацией объекта.",
   "type": "object",
